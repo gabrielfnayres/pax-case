@@ -11,13 +11,10 @@ import pytorch_lightning as pl
 from pytorch_lightning.trainer import Trainer
 from pytorch_lightning.callbacks import  EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
-from sklearn.metrics import accuracy_score
 
 from transformers import (
     AutoImageProcessor, 
-    SiglipForImageClassification,
-    TrainingArguments,
-    DefaultDataCollator
+    SiglipForImageClassification
 )
 from StanfordDataset import StanfordCarsDataset
 
