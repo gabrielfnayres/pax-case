@@ -6,6 +6,7 @@ dist/
 wheels/
 *.egg-info
 .DS_Store
+
 # Virtual environments
 .venv
 
@@ -13,3 +14,8 @@ wheels/
 *.jpg
 # Yolo
 *.pt
+
+#Lightning
+lightning_logs/
+lightning_log/
+*.ckpt
