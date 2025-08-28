@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
-from torchvision.transforms import Normalize, RandomAdjustSharpness, RandomRotation, ToTensor, Compose, Resize
+from torchvision.transforms import RandomAdjustSharpness, RandomRotation
 
 import numpy as np
 
@@ -15,7 +15,7 @@ from sklearn.metrics import accuracy_score
 
 from transformers import (
     AutoImageProcessor, 
-    Siglip2ForImageClassification,
+    SiglipForImageClassification,
     TrainingArguments,
     DefaultDataCollator
 )
@@ -26,7 +26,7 @@ class ImageClassificationModule(pl.LightningModule):
     super().__init__()
     self.save_hyperparameters()
 
-    self.model = Siglip2ForImageClassification.from_pretrained(model_name, num_labels=num_classes, ignore_mismatched_sizes=True)  
+    self.model = SiglipForImageClassification.from_pretrained(model_name, num_labels=num_classes, ignore_mismatched_sizes=True)  
 
     self.train_accuracy = torchmetrics.Accuracy(task="multiclass", num_classes=num_classes)
     self.val_accuracy = torchmetrics.Accuracy(task="multiclass", num_classes=num_classes)
@@ -98,32 +98,17 @@ class StanfordCarsDataModule(pl.LightningDataModule):
     self.batch_size = batch_size
     self.num_workers = num_workers
 
-    model_str = 'google/siglip2-base-patch16-224'
-    processor = AutoImageProcessor.from_pretrained(model_str)
-    image_mean, image_std = processor.image_mean, processor.image_std
-    size = processor.size['height']
-
-    self.train_transform = Compose([
-            Resize((size, size)), 
-            RandomRotation(90), 
-            RandomAdjustSharpness(2), 
-            ToTensor(), 
-            Normalize(mean=image_mean, std=image_std)
-        ])
+    model_str = 'google/siglip-base-patch16-224'
+    self.processor = AutoImageProcessor.from_pretrained(model_str)
     
-    self.val_transform = Compose([
-        Resize((size, size)), 
-        ToTensor(), 
-        Normalize(mean=image_mean, std=image_std)
-    ])
 
   def setup(self, stage=None):
         if stage == "fit" or stage is None:
             stanford_dataset = StanfordCarsDataset()
             train_hf, test_hf = stanford_dataset.load_data()  # This returns (train, test) tuple
             
-            tr_loader = StanfordCarsDataset(transform=self.train_transform)
-            val_loader = StanfordCarsDataset(transform=self.val_transform)
+            tr_loader = StanfordCarsDataset(processor=self.processor, is_training=True)
+            val_loader = StanfordCarsDataset(processor=self.processor, is_training=False)
             
             self.train_dataset = tr_loader.to_torch_dataset(train_hf)
             self.val_dataset = val_loader.to_torch_dataset(test_hf)  # Using test as validation
@@ -131,7 +116,7 @@ class StanfordCarsDataModule(pl.LightningDataModule):
         if stage == "test" or stage is None:
             stanford_dataset = StanfordCarsDataset()
             _, test_hf = stanford_dataset.load_data()
-            test_loader = StanfordCarsDataset(transform=self.val_transform)
+            test_loader = StanfordCarsDataset(processor=self.processor, is_training=False)
             self.test_dataset = test_loader.to_torch_dataset(test_hf)
   
   def train_dataloader(self):
@@ -164,7 +149,7 @@ class StanfordCarsDataModule(pl.LightningDataModule):
 
 if __name__ == '__main__':
   
-  model_str = 'google/siglip2-base-patch16-224'
+  model_str = 'google/siglip-base-patch16-224'
   
 
 
@@ -190,7 +175,7 @@ if __name__ == '__main__':
     logger=logger,
     accelerator='auto',
     devices='auto',
-    precision=16,
+    precision="16-mixed",
     log_every_n_steps=50,
     val_check_interval=1.0,
     enable_progress_bar=True,
