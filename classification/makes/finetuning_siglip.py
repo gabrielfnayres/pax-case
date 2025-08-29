@@ -160,11 +160,11 @@ if __name__ == '__main__':
   data_module = StanfordCarsDataModule(batch_size=batch_size, num_workers=4)
   model = ImageClassificationModule(model_name=model_str, num_classes=num_classes, learning_rate=learning_rate, weight_decay=weight_decay)
 
-  early_stopping = EarlyStopping(monitor='val_accuracy', mode='max', patience=5, verbose=True)
+  early_stopping = EarlyStopping(monitor='val_accuracy', mode='max', patience=5, verbose=True, min_delta=0.0)
 
   checkpoint_call = ModelCheckpoint(monitor='val_accuracy', mode='max', save_top_k=1, filename='best-checkpoint-{epoch:02d}-{val_accuracy:.3f}', verbose=True)
 
-  logger = TensorBoardLogger('lightning_logs', name='stanf-cars')
+  logger = TensorBoardLogger('lightning_logs_20', name='stanf-cars')
   
   trainer = Trainer(
     max_epochs=max_epochs,
