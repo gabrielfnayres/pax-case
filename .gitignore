@@ -19,3 +19,6 @@ wheels/
 lightning_logs/
 lightning_log/
 *.ckpt
+
+#Test
+demo_pipeline.py
