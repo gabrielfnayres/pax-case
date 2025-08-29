@@ -22,3 +22,5 @@ lightning_log/
 
 #Test
 demo_pipeline.py
+runs
+results/
