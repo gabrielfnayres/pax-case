@@ -6,8 +6,8 @@ from PIL import Image
 import numpy as np
 from pathlib import Path
 
-sys.path.append(os.path.join(os.path.dirname(__file__), 'classification', 'objects'))
-sys.path.append(os.path.join(os.path.dirname(__file__), 'classification', 'makes'))
+sys.path.append(os.path.join(os.path.dirname(__file__), 'src','classification', 'objects'))
+sys.path.append(os.path.join(os.path.dirname(__file__), 'src','classification', 'makes'))
 
 from classification.objects.object_classifier import ObjectClassfier
 from classification.makes.StanfordViT import Classifier as MakeClassifier

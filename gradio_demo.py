@@ -7,9 +7,9 @@ import sys
 import os
 from pathlib import Path
 
-# Add the classification modules to the path
-sys.path.append(os.path.join(os.path.dirname(__file__), 'classification', 'objects'))
-sys.path.append(os.path.join(os.path.dirname(__file__), 'classification', 'makes'))
+
+sys.path.append(os.path.join(os.path.dirname(__file__), 'src','classification', 'objects'))
+sys.path.append(os.path.join(os.path.dirname(__file__), 'src','classification', 'makes'))
 
 from object_classifier import ObjectClassfier
 from StanfordViT import Classifier as CarMakeClassifier
