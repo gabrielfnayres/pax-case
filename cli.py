@@ -14,7 +14,7 @@ def main():
     Main function to run the CLI for the vision pipeline.
     """
     parser = argparse.ArgumentParser(description="Process an image through the vision pipeline.")
-    parser.add_argument("image_path", type=str, help="Path to the input image.")
+    parser.add_argument("--image_path", type=str, help="Path to the input image.")
     parser.add_argument("--output", type=str, help="Path to save the JSON output.", default=None)
     parser.add_argument("--confidence", type=float, default=0.5, help="Confidence threshold for object detection.")
 
