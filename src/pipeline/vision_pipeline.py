@@ -36,8 +36,12 @@ class VisionPipeline:
         results = []
 
         for det in detections:
-            if det['class_name'] in ['car', 'truck']:
-                # Crop the detected vehicle from the main image
+            if det['class_name'] not in ['car', 'truck']:
+                x1, y1, x2, y2 = [int(coord) for coord in det['bbox']]
+                label_img_bgr = img[y1:y2, x1:x2]
+                pil_image = Image.fromarray(label_img_bgr)
+                results.append({'object_detection': det})
+            else:
                 x1, y1, x2, y2 = [int(coord) for coord in det['bbox']]
                 vehicle_img_bgr = img[y1:y2, x1:x2]
                 # Convert from BGR (OpenCV) to RGB (PIL)
