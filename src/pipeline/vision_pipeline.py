@@ -1,11 +1,23 @@
 from typing import Optional
 import cv2 as cv
 from PIL import Image
+import os
+import glob
+from tqdm import tqdm
+import json
 import numpy as np
-from pathlib import Path
 
 from classification.objects.object_classifier import ObjectClassfier
-from classification.makes.StanfordViT import Classifier as MakeClassifier
+from classification.makes.StanfordViT import MakeClassifier
+
+class NumpyEncoder(json.JSONEncoder):
+    """ Special json encoder for numpy types """
+    def default(self, obj):
+        if isinstance(obj, (np.integer, np.floating)):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
 
 class VisionPipeline:
     def __init__(self, object_model_version="yolov8l.pt", make_model_name="therealcyberlord/stanford-car-vit-patch16", cache_dir="models"):
@@ -27,54 +39,74 @@ class VisionPipeline:
             list: A list of dictionaries, where each dictionary represents a detected vehicle
                   and its make classification.
         """
+        if not os.path.exists(image_path):
+            raise FileNotFoundError(f'Directory not found at {image_path}')
+        
         img = cv.imread(image_path)
         if img is None:
             raise FileNotFoundError(f"Image not found at {image_path}")
 
-        detections = self.object_classifier.run_detection(img, confidence=confidence)
+        object_results = self.object_classifier.process(img, context={'confidence': confidence})
+        detections = object_results.get('detections', [])
 
         results = []
 
         for det in detections:
             if det['class_name'] not in ['car', 'truck']:
-                x1, y1, x2, y2 = [int(coord) for coord in det['bbox']]
-                label_img_bgr = img[y1:y2, x1:x2]
-                pil_image = Image.fromarray(label_img_bgr)
                 results.append({'object_detection': det})
-            else:
-                x1, y1, x2, y2 = [int(coord) for coord in det['bbox']]
-                vehicle_img_bgr = img[y1:y2, x1:x2]
-                # Convert from BGR (OpenCV) to RGB (PIL)
-                vehicle_img_rgb = cv.cvtColor(vehicle_img_bgr, cv.COLOR_BGR2RGB)
-                pil_image = Image.fromarray(vehicle_img_rgb)
+                continue
 
-                make_predictions = self.make_classifier.get_top_k_predictions(pil_image, k=5)
+            x1, y1, x2, y2 = [int(coord) for coord in det['bbox']]
+            vehicle_img_bgr = img[y1:y2, x1:x2]
+            if vehicle_img_bgr.size == 0:
+                continue
+            
+            vehicle_img_rgb = cv.cvtColor(vehicle_img_bgr, cv.COLOR_BGR2RGB)
+            pil_image = Image.fromarray(vehicle_img_rgb)
 
-                results.append({
-                    'object_detection': det,
-                    'make_classification': make_predictions
-                })
+            make_results = self.make_classifier.process(pil_image, context={'k': 5})
+            
+            results.append({
+                'object_detection': det,
+                **make_results
+            })
 
         return results
 
-# if __name__ == '__main__':
-#     pipeline = VisionPipeline()
-    
-#     example_image = "/Users/fnayres/pax-case/datasets/car-camera/images/images/1479502700758590752.jpg"
+    def process_multiple_images(self, images_dir: str, confidence: float = 0.5, output_dir: Optional[str] = None):
+        """
+        Processes a sequence of images through the full pipeline.
 
-#     try:
-#         output = pipeline.process_image(example_image)
+        Args:
+            images_dir (str): The path to the image dir.
+            confidence (float): The confidence threshold for object detection.
+            output_dir (str): The directory to save the output JSON files.
+
+        Returns:
+            dict: A dictionary where each key is the filename of an image and the value is a list of dictionaries,
+                  where each dictionary represents a detected vehicle and its make classification.
+        """
+        if output_dir:
+            os.makedirs(output_dir, exist_ok=True)
+
+        image_extensions = ["*.jpg", "*.jpeg", "*.png", "*.webp"]
+        image_files = []
+        for ext in image_extensions:
+            image_files.extend(glob.iglob(os.path.join(images_dir, ext), recursive=False))
+
+        all_results = {}
+        for image_path in tqdm(image_files, desc="Processing Images"):
+            filename = os.path.basename(image_path)
+            try:
+                result = self.process_image(image_path, confidence)
+                all_results[filename] = result
+                if output_dir:
+                    output_path = os.path.join(output_dir, f"{os.path.splitext(filename)[0]}.json")
+                    with open(output_path, 'w') as f:
+                        json.dump(result, f, cls=NumpyEncoder, indent=4)
+            except Exception as e:
+                print(f"Error processing {filename}: {str(e)}")
+                all_results[filename] = []
         
-#         print(f"Processing results for: {example_image}")
-#         for i, result in enumerate(output):
-#             print(f"\n--- Vehicle {i+1} ---")
-#             obj_det = result['object_detection']
-#             print(f"  Detected: {obj_det['class_name']} with confidence {obj_det['confidence']:.2f}")
-#             print(f"  Bounding Box: {obj_det['bbox']}")
-            
-#             print("  Top 5 Make Predictions:")
-#             for pred in result['make_classification']:
-#                 print(f"    - {pred['label']}: {pred['confidence']:.3f}")
-
-#     except Exception as e:
-#         print(f"An error occurred: {e}")
+        print(f"Completed processing {len(image_files)} images")
+        return all_results

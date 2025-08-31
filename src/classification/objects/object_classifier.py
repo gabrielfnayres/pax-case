@@ -4,8 +4,9 @@ import numpy as np
 from pathlib import Path
 import os
 import shutil
+from classification.base import BaseClassifier
 
-class ObjectClassfier:
+class ObjectClassfier(BaseClassifier):
   def __init__(self, model_version="yolov8l.pt", cache_dir="models"):
     
     cache_path = Path(cache_dir)
@@ -34,9 +35,20 @@ class ObjectClassfier:
     }
     self.class_ids = list(self.classes.keys())
 
+  @property
+  def name(self) -> str:
+      return "object_detection"
+
+  def process(self, image, context: dict) -> dict:
+      """Process an image and return object detection results."""
+      confidence = context.get('confidence', 0.5)
+      results = self.detect(image, confidence=confidence, save_results=False)
+      detections = self.process_detection(results)
+      return {'detections': detections}
+
   def detect(self, img, save_results=True, confidence=0.5):
     
-    results = self.model.predict(source=img, conf=confidence, classes=self.class_ids, save=save_results, save_txt=True, save_conf=True)
+    results = self.model.predict(source=img, conf=confidence, classes=self.class_ids, save=save_results, save_txt=save_results, save_conf=save_results)
     return results
   
   def process_detection(self, results):
@@ -67,52 +79,34 @@ class ObjectClassfier:
 
     return detections
   
-  def run_detection(self, img, out_dir="results/phase1", confidence=0.5):
 
-    Path(out_dir).mkdir(parents=True, exist_ok=True)
-
-    results = self.detect(img, confidence=confidence)
-    detections = self.process_detection(results)
-
-    class_counts = {}
-    for det in detections:
-      class_name = det['class_name']
-      class_counts[class_name] = class_counts.get(class_name, 0) + 1
-      
-    for class_name, count, in class_counts.items():
-      print(f"{class_name}: {count}")
-
-    return detections
-  
-def main():
-    """
-    Example usage of Phase 1 Object Classification
-    """
-    # Initialize classifier
-    classifier = ObjectClassfier()  # Using nano model for speed
+# def main():
+#     """
+#     Example usage of Phase 1 Object Classification
+#     """
+#     classifier = ObjectClassfier() 
     
-    sources = [
-        "/Users/fnayres/pax-case/images/images/images/1479502700758590752.jpg",
-    ]
+#     sources = [
+#         "/Users/fnayres/pax-case/images/images/images/1479502700758590752.jpg",
+#     ]
     
-    for source in sources[:1]:  # Process first source only in example
-        try:
-            detections = classifier.run_detection(
-                img=source,
-                confidence=0.5,
-                out_dir="results/phase1"
-            )
+#     for source in sources[:1]:  
+#         try:
+#             detections = classifier.run_detection(
+#                 img=source,
+#                 confidence=0.5,
+#                 out_dir="results/phase1"
+#             )
             
-            # Optional: Print detailed results
-            for i, det in enumerate(detections):
-                print(f"\nDetection {i+1}:")
-                print(f"  Class: {det['class_name']}")
-                print(f"  Confidence: {det['confidence']:.3f}")
-                print(f"  Bounding Box: {det['bbox']}")
-                print(f"  Center: ({det['center'][0]:.1f}, {det['center'][1]:.1f})")
+#             for i, det in enumerate(detections):
+#                 print(f"\nDetection {i+1}:")
+#                 print(f"  Class: {det['class_name']}")
+#                 print(f"  Confidence: {det['confidence']:.3f}")
+#                 print(f"  Bounding Box: {det['bbox']}")
+#                 print(f"  Center: ({det['center'][0]:.1f}, {det['center'][1]:.1f})")
                 
-        except Exception as e:
-            print(f"Error processing {source}: {e}")
+#         except Exception as e:
+#             print(f"Error processing {source}: {e}")
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

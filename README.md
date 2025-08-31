@@ -19,31 +19,15 @@ The solution must be scalable to handle up to 10 million images daily and be fle
     - Process single images from the command line.
     - Adjustable confidence threshold for object detection.
     - Output results in JSON format to the terminal or a file.
-- **Gradio Web Demo** (`gradio_demo.py`):
-    - Interactive, user-friendly interface for image uploads.
-    - Real-time processing and display of annotated images with bounding boxes.
-    - Shows top-5 car make predictions with confidence scores.
 - **Scalability and Extensibility**:
     - The architecture is designed to be scalable and extensible. See `SCALING_STRATEGY.md` for a detailed plan on scaling to 10M images/day and adding new classification types.
 
-## Project Structure
-
-```
-.pax-case/
-├── classification/
-│   ├── makes/            # Car make classification model and logic
-│   └── objects/          # Object detection model and logic
-├── datasets/
-│   └── car-camera/       # Example dataset
-├── pipeline/
-│   └── vision_pipeline.py # Core processing pipeline
-├── cli.py                # Command-line interface
-├── gradio_demo.py        # Gradio web interface
-├── pyproject.toml        # Project dependencies
-└── README.md             # This file
-```
-
-## Setup and Installation
+## Package usage
+1. **Install PyPi package**
+  ```bash
+  pip install pax-detector
+  ```
+## Local Setup and Installation
 
 1.  **Clone the repository**:
     ```bash
@@ -54,21 +38,26 @@ The solution must be scalable to handle up to 10 million images daily and be fle
 2.  **Install dependencies**:
     It is recommended to use a virtual environment. This project uses `uv` for package management.
     ```bash
-    python -m venv .venv
+    uv venv 
     source .venv/bin/activate
-    pip install uv
-    uv pip install -r requirements.txt # Or from pyproject.toml
+
+    uv pip install -e . # To build package locally
+
+    uv sync # If want to install local dependencies 
     ```
 
 ## Usage
 
 ### Command-Line Interface (CLI)
 
-The CLI tool (`cli.py`) is used for processing individual images.
+The CLI tool (`detector`) is used for processing individual images.
 
 **Basic Usage**:
 ```bash
-python cli.py --image_path /path/to/your/image.jpg
+detector --image_path /path/to/your/image.jpg
+
+# If using uv
+uv detector --image_path /path/to/your/image.jpg
 ```
 
 **Arguments**:
@@ -78,7 +67,10 @@ python cli.py --image_path /path/to/your/image.jpg
 
 **Example**:
 ```bash
-python cli.py --image_path datasets/car-camera/images/00001.jpg --confidence 0.4 --output results.json
+detector --image_path datasets/car-camera/images/00001.jpg --confidence 0.4 --output results.json
+
+# If using uv
+uv detector --image_path datasets/car-camera/images/00001.jpg --confidence 0.4 --output results.json
 ```
 
 This will process the image, save the output to `results.json`, and print the path to the output file.
@@ -93,11 +85,6 @@ python gradio_demo.py
 ```
 
 This will start a local web server. Open your browser and navigate to the URL provided (usually `http://127.0.0.1:7860`) to access the interface.
-
-**How to use the demo**:
-1.  Drag and drop an image file into the upload box or click to browse.
-2.  The pipeline will automatically process the image.
-3.  View the annotated image with bounding boxes, a summary of the results, and detailed classification outputs.
 
 ## Extensibility
 
