@@ -6,10 +6,10 @@ from PIL import Image
 import requests
 
 class Classifier:
-    def __init__(self, image=None):  
+    def __init__(self, model_name="therealcyberlord/stanford-car-vit-patch16", cache_dir="models", image=None):  
         self.image = image
-        self.extractor = AutoFeatureExtractor.from_pretrained("therealcyberlord/stanford-car-vit-patch16")
-        self.model = AutoModelForImageClassification.from_pretrained("therealcyberlord/stanford-car-vit-patch16")
+        self.extractor = AutoFeatureExtractor.from_pretrained(model_name, cache_dir=cache_dir)
+        self.model = AutoModelForImageClassification.from_pretrained(model_name, cache_dir=cache_dir)
     
     def classify_car_image(self, image=None):
         img_to_classify = image if image is not None else self.image
@@ -60,7 +60,6 @@ class Classifier:
             outputs = self.model(**inputs)
             predictions = nn.functional.softmax(outputs.logits, dim=-1)
         
-        # Get top k predictions
         top_k_values, top_k_indices = torch.topk(predictions, k)
         
         results = []
@@ -83,20 +82,18 @@ class Classifier:
 
 
 if __name__ == "__main__":
-    classifier = Classifier()
+    classifier = Classifier(model_name="therealcyberlord/stanford-car-vit-patch16", cache_dir="models")
     
     try:
-        # Load and classify an image from file
-        result = classifier.classify_from_file("/Users/fnayres/pax-case/datasets/car-camera/images/images/1479502700758590752.jpg")
+        image = Image.open("/Users/fnayres/pax-case/datasets/car-camera/images/images/1479502700758590752.jpg")
+        result = classifier.classify_car_image(image)
         print(f"Predicted car: {result['predicted_class']}")
         print(f"Confidence: {result['confidence']:.4f}")
         
-        # Get top 5 predictions
-        top_predictions = classifier.get_top_k_predictions(k=5)
+        top_predictions = classifier.get_top_k_predictions(image, k=5)
         print("\nTop 5 predictions:")
         for i, pred in enumerate(top_predictions, 1):
             print(f"{i}. {pred['label']} - {pred['confidence']:.4f}")
             
     except Exception as e:
         print(f"Error: {e}")
-    

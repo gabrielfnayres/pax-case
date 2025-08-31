@@ -1,31 +1,27 @@
-import sys 
-import os
 from typing import Optional
 import cv2 as cv
 from PIL import Image
 import numpy as np
 from pathlib import Path
 
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src','classification', 'objects'))
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src','classification', 'makes'))
-
 from classification.objects.object_classifier import ObjectClassfier
 from classification.makes.StanfordViT import Classifier as MakeClassifier
 
 class VisionPipeline:
-    def __init__(self):
+    def __init__(self, object_model_version="yolov8l.pt", make_model_name="therealcyberlord/stanford-car-vit-patch16", cache_dir="models"):
         """
         Initializes the vision pipeline by loading the object detection and car make classification models.
         """
-        self.object_classifier = ObjectClassfier()
-        self.make_classifier = MakeClassifier()
+        self.object_classifier = ObjectClassfier(model_version=object_model_version, cache_dir=cache_dir)
+        self.make_classifier = MakeClassifier(model_name=make_model_name, cache_dir=cache_dir)
 
-    def process_image(self, image_path):
+    def process_image(self, image_path, confidence=0.5):
         """
         Processes a single image through the full pipeline.
 
         Args:
             image_path (str): The path to the image file.
+            confidence (float): The confidence threshold for object detection.
 
         Returns:
             list: A list of dictionaries, where each dictionary represents a detected vehicle
@@ -35,7 +31,7 @@ class VisionPipeline:
         if img is None:
             raise FileNotFoundError(f"Image not found at {image_path}")
 
-        detections = self.object_classifier.run_detection(img, confidence=0.5)
+        detections = self.object_classifier.run_detection(img, confidence=confidence)
 
         results = []
 

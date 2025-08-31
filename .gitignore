@@ -6,14 +6,15 @@ dist/
 wheels/
 *.egg-info
 .DS_Store
-
+models/
 # Virtual environments
 .venv
-
+m
 # Dataset
 *.jpg
 # Yolo
 *.pt
+*.locks
 
 #Lightning
 lightning_logs/

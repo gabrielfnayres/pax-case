@@ -1989,8 +1989,8 @@ wheels = [
 ]
 
 [[package]]
-name = "pax-case"
-version = "0.1.0"
+name = "pax-detector"
+version = "0.1.2"
 source = { virtual = "." }
 dependencies = [
     { name = "datasets" },
@@ -2002,6 +2002,7 @@ dependencies = [
     { name = "pytorch-lightning" },
     { name = "scikit-learn" },
     { name = "tensorboardx" },
+    { name = "torch" },
     { name = "torchaudio" },
     { name = "torchmetrics" },
     { name = "transformers" },
@@ -2020,6 +2021,7 @@ requires-dist = [
     { name = "pytorch-lightning", specifier = ">=2.5.3" },
     { name = "scikit-learn", specifier = ">=1.7.1" },
     { name = "tensorboardx", specifier = ">=2.6.4" },
+    { name = "torch", specifier = ">=2.8.0" },
     { name = "torchaudio", specifier = ">=2.8.0" },
     { name = "torchmetrics", specifier = ">=1.8.1" },
     { name = "transformers", specifier = ">=4.55.4" },

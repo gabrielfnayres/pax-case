@@ -2,11 +2,30 @@ from ultralytics import YOLO
 import cv2 as cv
 import numpy as np
 from pathlib import Path
+import os
+import shutil
 
 class ObjectClassfier:
-  def __init__(self, model_version="yolov8l.pt"):
+  def __init__(self, model_version="yolov8l.pt", cache_dir="models"):
     
-    self.model = YOLO(model_version)
+    cache_path = Path(cache_dir)
+    cache_path.mkdir(exist_ok=True)
+    
+    model_path = cache_path / model_version
+    
+    if model_path.exists():
+        print(f"Loading cached model from {model_path}")
+        self.model = YOLO(str(model_path))
+    else:
+        print(f"Downloading model {model_version}...")
+        model = YOLO(model_version)
+        downloaded_path = Path(model.ckpt_path)
+
+        print(f"Moving model to {model_path}")
+        shutil.move(str(downloaded_path), str(model_path))
+
+        self.model = YOLO(str(model_path))
+
     self.classes = {
       0: 'person',
       1: 'bicycle',
@@ -97,9 +116,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
-  
-  

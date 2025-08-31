@@ -20,9 +20,9 @@ class IntegratedPipeline:
     Integrated pipeline that combines object detection and car make classification
     """
     
-    def __init__(self):
-        self.object_classifier = ObjectClassfier(model_version="yolov8l.pt") 
-        self.car_make_classifier = CarMakeClassifier()
+    def __init__(self, cache_dir="models"):
+        self.object_classifier = ObjectClassfier(model_version="yolov8l.pt", cache_dir=cache_dir) 
+        self.car_make_classifier = CarMakeClassifier(model_name="therealcyberlord/stanford-car-vit-patch16", cache_dir=cache_dir)
         
     def process_image(self, image):
         """
@@ -101,7 +101,7 @@ def create_gradio_interface():
     Create and configure the Gradio interface
     """
     
-    pipeline = IntegratedPipeline()
+    pipeline = IntegratedPipeline(cache_dir="models")
     
     def process_and_display(image):
         """
@@ -192,7 +192,6 @@ def create_gradio_interface():
                     value="Upload an image to see car make classification results"
                 )
         
-        gr.Markdown("## 📸 Try these examples:")
         
         process_btn.click(
             fn=process_and_display,
