@@ -2,6 +2,8 @@ import json
 import argparse
 from pathlib import Path
 import numpy as np
+from rich.console import Console
+from rich.table import Table
 
 from utils.utils import NumpyEncoder, parse_config_yaml
 from pipeline.vision_pipeline import VisionPipeline
@@ -14,8 +16,6 @@ def main():
     parser.add_argument('--confidence', type=float, help='Confidence threshold for object detection. Overrides config file setting.')
     parser.add_argument('--output_dir', type=str, default='runs/detections', help='Directory to save the output images.')
     args = parser.parse_args()
-    results = {}
-
     config = parse_config_yaml(args.config)
     if not config:
         print(f"Error: Could not read or parse config file at {args.config}")
@@ -43,29 +43,61 @@ def main():
             if not Path(image_path).is_file():
                 print(f"Error: Image file not found at {image_path}")
                 return
-            results = pipeline.process_image(image_path, confidence, args.output_dir)
+            detections = pipeline.process_image(image_path, confidence, args.output_dir)
+            results = {Path(image_path).name: detections}
         elif images_dir:
             if not Path(images_dir).is_dir():
                 print(f"Error: Directory not found at {images_dir}")
                 return
             results = pipeline.process_multiple_images(images_dir, confidence, args.output_dir)
+        else:
+            results = {}
 
     except Exception as e:
         print(f"An error occurred during processing: {e}")
         return
 
     if results:
-        if image_path:
-            json_filename = Path(image_path).stem + '.json'
-        else:
-            json_filename = 'results.json'
+        for img_name, detections in results.items():
+            json_filename = Path(img_name).stem + '.json'
+            json_output_path = output_path / json_filename
+            with open(json_output_path, 'w') as f:
 
-        json_output_path = output_path / json_filename
-
-        with open(json_output_path, 'w') as f:
-            json.dump(results, f, cls=NumpyEncoder, indent=4)
+                data_to_dump = detections if images_dir or image_path else results
+                json.dump(data_to_dump, f, cls=NumpyEncoder, indent=4)
 
         print(f"Results saved to {json_output_path}")
+
+        console = Console()
+        table = Table(show_header=True, header_style="bold magenta")
+        table.add_column("Image", style="dim")
+        table.add_column("Top Prediction")
+        table.add_column("Confidence", justify="right")
+
+        for img_name, detections in results.items():
+            if not detections:
+                table.add_row(img_name, "No objects detected", "")
+                continue
+
+            top_prediction = max(detections, key=lambda p: p.get('object_detection', {}).get('confidence', 0))
+
+            obj_details = top_prediction.get('object_detection', {})
+            make_details_list = top_prediction.get('make_classification', [])
+
+            label = obj_details.get('label', 'N/A')
+            confidence = obj_details.get('confidence', 0)
+
+            if make_details_list:
+                top_make = max(make_details_list, key=lambda m: m.get('confidence', 0))
+                label = top_make.get('label', label)
+                confidence = top_make.get('confidence', confidence)
+
+            table.add_row(
+                img_name,
+                label,
+                f"{confidence:.4f}"
+            )
+        console.print(table)
     else:
         print("No results to save.")
 

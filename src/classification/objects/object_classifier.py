@@ -6,9 +6,15 @@ import os
 import shutil
 from classification.base import BaseClassifier
 
-class ObjectClassfier(BaseClassifier):
+class ObjectClassifier(BaseClassifier):
   def __init__(self, model_version="yolov8l.pt", cache_dir="models"):
-    
+    """
+    Object Detection model  
+
+    Args:
+        model_version: Base model used for detection
+        cache_dir: Location to cache model necessary files
+    """
     cache_path = Path(cache_dir)
     cache_path.mkdir(exist_ok=True)
     
@@ -42,15 +48,25 @@ class ObjectClassfier(BaseClassifier):
   def process(self, image, context: dict) -> dict:
       """Process an image and return object detection results."""
       confidence = context.get('confidence', 0.5)
-      output_dir = context.get('output_dir', 'runs/detect')
-      results = self.detect(image, confidence=confidence, save_results=True, project=output_dir)
+      output_dir = context.get('output_dir', 'runs/detections')
+      save_results = context.get('save_results', True)
+
+      results = self.detect(image, confidence=confidence, save_results=save_results, project=output_dir)
       detections = self.process_detection(results)
       return {'detections': detections}
 
-  def detect(self, img, save_results=True, confidence=0.5, project='runs/detect'):
-    
-    results = self.model.predict(source=img, conf=confidence, classes=self.class_ids, save=save_results, save_txt=save_results, save_conf=save_results, project=project)
-    return results
+  def detect(self, img, save_results: bool = True, confidence: float = 0.5, project: str = 'runs/detections'):
+      """Runs the YOLOv8 model to detect objects in the given image."""
+      results = self.model.predict(
+          source=img,
+          conf=confidence,
+          classes=self.class_ids,
+          save=save_results,
+          save_txt=save_results,
+          save_conf=save_results,
+          project=project
+      )
+      return results
   
   def process_detection(self, results):
     detections = []

@@ -38,7 +38,7 @@ class VisionPipeline:
             classifier_class = _load_classifier(class_path)
             self.classifiers[step['name']] = classifier_class(**params)
 
-    def process_image(self, image_path: str, confidence: float = 0.5, output_dir: str = 'runs/detect'):
+    def process_image(self, image_path: str, confidence: float = 0.5, output_dir: str = 'runs/detections'):
         """
         Processes a single image through the full pipeline.
 

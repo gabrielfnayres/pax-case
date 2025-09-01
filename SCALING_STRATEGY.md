@@ -21,8 +21,7 @@ This document outlines the strategy for scaling the vision pipeline to handle 10
         -   `object-detection-worker`: Runs the YOLO model.
         -   `car-make-worker`: Runs the ViT model for car make classification.
 
-
-5.  **Optimized Model Serving** (e.g. Inference Servers):
+4.  **Optimized Model Serving** (e.g. Inference Servers):
     -   Use a dedicated inference server to load the models.
     -   This allows for batching requests, concurrent model execution, and efficient GPU utilization, significantly increasing throughput.
 

@@ -1,16 +1,16 @@
-image_path: '/Users/fnayres/Downloads/captura-de-tela-2022-12-08-as-13.36.55.webp'
+image_path: '/Users/fnayres/pax-case/dummy_images/Sedan/Image_008754.jpg'
 images_dir: null
-confidence: 0.5
+confidence: 0.25
 
 pipeline:
   - name: object_detection
-    class: classification.objects.object_classifier.ObjectClassfier
+    class: classification.objects.object_classifier.ObjectClassifier
     params:
       model_version: yolov8l.pt
 
   - name: car_make_classification
     class: classification.makes.siglip_classifier.MakeClassifier
     depends_on: object_detection
-    condition: "'car' in detection['class_name'] or 'person' in detection['class_name']"
+    condition: "'car' in detection['class_name'] or 'truck' in detection['class_name']"
     
     

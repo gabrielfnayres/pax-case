@@ -1860,7 +1860,7 @@ wheels = [
 
 [[package]]
 name = "pax-detector"
-version = "0.1.5"
+version = "0.1.6"
 source = { virtual = "." }
 dependencies = [
     { name = "datasets" },
@@ -1871,6 +1871,7 @@ dependencies = [
     { name = "pathlib" },
     { name = "pillow" },
     { name = "pytorch-lightning" },
+    { name = "rich" },
     { name = "scikit-learn" },
     { name = "tensorboardx" },
     { name = "torch" },
@@ -1891,6 +1892,7 @@ requires-dist = [
     { name = "pathlib", specifier = ">=1.0.1" },
     { name = "pillow", specifier = ">=11.3.0" },
     { name = "pytorch-lightning", specifier = ">=2.5.3" },
+    { name = "rich", specifier = ">=14.1.0" },
     { name = "scikit-learn", specifier = ">=1.7.1" },
     { name = "tensorboardx", specifier = ">=2.6.4" },
     { name = "torch", specifier = ">=2.8.0" },
