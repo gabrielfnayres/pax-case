@@ -63,7 +63,7 @@ class CarMakeDataset(Dataset):
         
         if self.processor is not None:
             processed = self.processor(images=image, return_tensors="pt")
-            pixel_values = processed['pixel_values'].squeeze(0)  # Remove batch dimension
+            pixel_values = processed['pixel_values'].squeeze(0)  
         else:
             transform = transforms.Compose([
                 transforms.Resize((224, 224)),

@@ -4,13 +4,12 @@ This document outlines the strategy for scaling the vision pipeline to handle 10
 
 ## 1. Scaling to 10 Million Images per Day
 
-Processing 10 million images daily requires a robust, distributed, and resilient architecture. A monolithic application would not be cost-effective or performant. The proposed solution is a microservices-based architecture centered around a message queue.
 
 **Key Components**:
 
-1.  **API Gateway**: A single entry point for all incoming image processing requests. It handles authentication, rate limiting, and routing requests to the appropriate service.
+1.  **API Gateway**: A single entry point for all incoming image processing requests. Before get in this point the client traffic should pass through a Load Balancer to avoid possible API overloads 
 
-2.  **Message Queue** (e.g., RabbitMQ, AWS SQS, Google Cloud Pub/Sub):
+2.  **Message Queue**:
     -   Decouples the request intake from the processing pipeline.
     -   The API Gateway publishes a message to the queue for each image, containing metadata like the image location (e.g., an S3 bucket URL).
     -   Provides persistence and allows the processing workers to consume images at their own pace, preventing overload.
@@ -22,28 +21,12 @@ Processing 10 million images daily requires a robust, distributed, and resilient
         -   `object-detection-worker`: Runs the YOLO model.
         -   `car-make-worker`: Runs the ViT model for car make classification.
 
-4.  **Orchestration** (e.g., Kubernetes):
-    -   Manages the deployment and scaling of the containerized workers.
-    -   **Horizontal Pod Autoscaling (HPA)** can automatically scale the number of worker pods based on queue length or CPU/GPU utilization.
-    -   This ensures that we have enough compute resources during peak loads and can scale down to save costs during off-peak hours.
 
-5.  **Optimized Model Serving** (e.g., NVIDIA Triton Inference Server, TorchServe):
-    -   Instead of loading models inside each worker, use a dedicated inference server.
+5.  **Optimized Model Serving** (e.g. Inference Servers):
+    -   Use a dedicated inference server to load the models.
     -   This allows for batching requests, concurrent model execution, and efficient GPU utilization, significantly increasing throughput.
 
-6.  **Distributed Storage** (e.g., AWS S3, Google Cloud Storage):
-    -   Store raw images and JSON results in a scalable and durable object store.
-
-**Workflow**:
-
-```
-[Client] -> [API Gateway] -> [Message Queue] -> [Auto-Scaling Workers] -> [Results DB/Storage]
-                                   ^                   |
-                                   |                   v
-                               [Kubernetes]      [Inference Server]
-```
-
-This architecture is cost-effective because resources are scaled based on demand. It is also resilient, as the message queue can handle request spikes and a failing worker will not cause the entire system to crash.
+![alt text](svg/system.png)
 
 ## 2. Adding More Classifications
 
@@ -51,10 +34,9 @@ The pipeline should be flexible enough to easily add new classification models w
 
 **Proposed Design**:
 
-1.  **Classifier Abstraction**: Define a base `Classifier` class that all new classifiers must implement. This class would enforce a common interface, such as `process(image)` and `get_name()`.
+1.  **Classifier Abstraction**: 
 
     ```python
-    # In a new file, e.g., classification/base.py
     from abc import ABC, abstractmethod
 
     class BaseClassifier(ABC):
@@ -78,7 +60,6 @@ The pipeline should be flexible enough to easily add new classification models w
     pipeline:
       - name: object_detection
         class: classification.objects.ObjectClassfier
-        # No dependencies, runs first
 
       - name: car_make_classification
         class: classification.makes.StanfordViT
@@ -91,7 +72,7 @@ The pipeline should be flexible enough to easily add new classification models w
         condition: "'person' in context['object_detection']['detected_classes']"
     ```
 
-3.  **Pipeline Execution Engine**: The `VisionPipeline` will read this configuration, instantiate the required classifiers, and execute them in the correct order, passing context (e.g., results from previous steps) as needed.
+3.  **Pipeline Execution Engine**: The `VisionPipeline` will read this configuration, instantiate the required classifiers, and execute them in the correct order, passing context as needed.
 
 **Example: Adding a T-Shirt Color Classifier**
 

@@ -16,7 +16,7 @@ from transformers import (
     AutoImageProcessor, 
     SiglipForImageClassification
 )
-from .CarMakeDataset import CarMakeDataset
+from .carmake_dataset import CarMakeDataset
 
 class ImageClassificationModule(pl.LightningModule):
   def __init__(self, model_name: str, num_classes: int, learning_rate: float = 1e-4, weight_decay: float = 0.01, id2label=None, label2id=None):

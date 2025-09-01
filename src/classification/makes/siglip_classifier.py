@@ -7,7 +7,7 @@ from huggingface_hub import hf_hub_download
 
 from classification.base import BaseClassifier
 from classification.makes.finetuning_siglip import ImageClassificationModule
-from .CarMakeDataset import CarMakeDataset
+from .carmake_dataset import CarMakeDataset
 
 class MakeClassifier(BaseClassifier):
     def __init__(self, model_name_for_processor='google/siglip-base-patch16-224', cache_dir="models"):

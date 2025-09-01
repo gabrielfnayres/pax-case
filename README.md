@@ -46,6 +46,36 @@ The CLI tool (`detector`) is used for processing individual images.
 
 **Basic Usage**:
 
+**Using a Configuration File**:
+
+You can also run the CLI using a `config.yml` file to specify parameters.
+
+*Example `config.yml`:*
+```yaml
+image_path: '/Users/fnayres/Downloads/captura-de-tela-2022-12-08-as-13.36.55.webp'
+images_dir: null
+confidence: 0.5
+
+pipeline:
+  - name: object_detection
+    class: classification.objects.object_classifier.ObjectClassfier
+    params:
+      model_version: yolov8l.pt
+
+  - name: car_make_classification
+    class: classification.makes.siglip_classifier.MakeClassifier
+    depends_on: object_detection
+    condition: "'car' in detection['class_name'] or 'truck' in detection['class_name']" # accept None condition
+    
+```
+
+*Run with config*:
+```bash
+detector --config config.yml
+# or
+uv run detector --config config.yml
+```
+
 To process a single image:
 ```bash
 detector --image_path /path/to/your/image.jpg
@@ -58,23 +88,6 @@ To process all images in a directory:
 detector --images_dir /path/to/your/images/
 # or
 uv run detector --images_dir /path/to/your/images/
-```
-
-**Using a Configuration File**:
-
-You can also run the CLI using a `config.yml` file to specify parameters.
-
-*Example `config.yml`:*
-```yaml
-image_path: '/path/to/your/image.jpg'
-confidence: 0.6
-```
-
-*Run with config*:
-```bash
-detector --config config.yml
-# or
-uv run detector --config config.yml
 ```
 
 **Arguments**:
