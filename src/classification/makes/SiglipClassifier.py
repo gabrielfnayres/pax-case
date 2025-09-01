@@ -3,14 +3,22 @@ import torch.nn as nn
 from PIL import Image
 from transformers import AutoImageProcessor
 import json
+from huggingface_hub import hf_hub_download
 
 from classification.base import BaseClassifier
 from classification.makes.finetuning_siglip import ImageClassificationModule
 from .CarMakeDataset import CarMakeDataset
 
 class MakeClassifier(BaseClassifier):
-    def __init__(self, model_path="models/sig_makes.ckpt", model_name_for_processor='google/siglip-base-patch16-224', cache_dir="models", label_map_path="models/label_map.json"):
+    def __init__(self, model_name_for_processor='google/siglip-base-patch16-224', cache_dir="models"):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        repo_id = "fnayres/car-make-recognition-google-siglip-base-patch16-224"
+        model_filename = "sig_makes.ckpt"
+        label_map_filename = "label_map.json"
+
+        model_path = hf_hub_download(repo_id=repo_id, filename=model_filename, cache_dir=cache_dir)
+        label_map_path = hf_hub_download(repo_id=repo_id, filename=label_map_filename, cache_dir=cache_dir)
 
         with open(label_map_path, 'r') as f:
             label_map = json.load(f)

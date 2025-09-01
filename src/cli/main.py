@@ -12,7 +12,6 @@ def main():
     group.add_argument('--image_path', type=str, help='Path to a single image file.')
     group.add_argument('--images_dir', type=str, help='Path to a directory of image files.')
     group.add_argument('--config', type=str, help='Path to a config.yml file')
-    parser.add_argument('--make_model_path', type=str, required=False, help='Path to the car make classification model checkpoint.')
     parser.add_argument('--confidence', type=float, default=0.5, help='Confidence threshold for object detection.')
 
     args = parser.parse_args()
@@ -21,7 +20,7 @@ def main():
     if args.config:
         config = parse_config_yaml(args.config)
         try:
-            pipeline = VisionPipeline(make_model_path=config.get('make_model_path'))
+            pipeline = VisionPipeline()
             confidence = config.get('confidence', 0.5)
             image_path = config.get('image_path')
             images_dir = config.get('images_dir')
@@ -41,7 +40,7 @@ def main():
             return
     else:
         try:
-            pipeline = VisionPipeline(make_model_path=args.make_model_path)
+            pipeline = VisionPipeline()
             if args.image_path:
                 if not Path(args.image_path).is_file():
                     print(f"Error: Image file not found at {args.image_path}")
@@ -56,7 +55,7 @@ def main():
             print(f"An error occurred during processing: {e}")
             return
 
-    #print(json.dumps(results, cls=NumpyEncoder, indent=4))
+    print(json.dumps(results, cls=NumpyEncoder, indent=4))
 
 
 if __name__ == '__main__':

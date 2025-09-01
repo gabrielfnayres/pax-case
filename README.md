@@ -14,11 +14,11 @@ The solution must be scalable to handle up to 10 million images daily and be fle
 
 - **Two-Stage Pipeline**:
     - **Object Detection**: Uses a YOLOv8 model to detect objects (person, bicycle, car, truck).
-    - **Car Make Classification**: Uses a Vision Transformer (ViT) model fine-tuned on the Stanford Cars dataset to classify the make of detected cars.
-- **CLI Tool** (`cli.py`):
-    - Process single images from the command line.
+    - **Car Make Classification**: Uses a Google SigLIP model fine-tuned on the Stanford Cars dataset to classify the make of detected cars.
+- **CLI Tool** (`detector`):
+    - Process single images or directories of images from the command line.
+    - Supports configuration via a YAML file.
     - Adjustable confidence threshold for object detection.
-    - Output results in JSON format to the terminal or a file.
 - **Scalability and Extensibility**:
     - The architecture is designed to be scalable and extensible. See `SCALING_STRATEGY.md` for a detailed plan on scaling to 10M images/day and adding new classification types.
 
@@ -27,6 +27,7 @@ The solution must be scalable to handle up to 10 million images daily and be fle
   ```bash
   pip install pax-detector
   ```
+
 ## Local Setup and Installation
 
 1.  **Clone the repository**:
@@ -36,13 +37,12 @@ The solution must be scalable to handle up to 10 million images daily and be fle
     ```
 
 2.  **Install dependencies**:
-    It is recommended to use a virtual environment. This project uses `uv` for package management.
+    It is recommended to use a virtual environment. This project uses `uv` https://docs.astral.sh/uv/getting-started/installation/ for package management.
     ```bash
     uv venv 
     source .venv/bin/activate
 
     uv pip install -e . # To build package locally
-
     uv sync # If want to install local dependencies 
     ```
 
@@ -53,38 +53,44 @@ The solution must be scalable to handle up to 10 million images daily and be fle
 The CLI tool (`detector`) is used for processing individual images.
 
 **Basic Usage**:
+
+To process a single image:
 ```bash
 detector --image_path /path/to/your/image.jpg
+```
 
-# If using uv
-uv detector --image_path /path/to/your/image.jpg
+To process all images in a directory:
+```bash
+detector --images_dir /path/to/your/images/
+```
+
+**Using a Configuration File**:
+
+You can also run the CLI using a `config.yml` file to specify parameters.
+
+*Example `config.yml`:*
+```yaml
+image_path: '/path/to/your/image.jpg'
+confidence: 0.6
+```
+
+*Run with config*:
+```bash
+detector --config config.yml
 ```
 
 **Arguments**:
-- `--image_path`: (Required) Path to the input image.
-- `--output`: (Optional) Path to save the JSON output file.
-- `--confidence`: (Optional) Confidence threshold for object detection (default: 0.5).
+- `--image_path`: Path to a single input image.
+- `--images_dir`: Path to a directory of images.
+- `--config`: Path to a YAML configuration file.
+- `--confidence`: Confidence threshold for object detection (default: 0.5).
 
 **Example**:
 ```bash
-detector --image_path datasets/car-camera/images/00001.jpg --confidence 0.4 --output results.json
-
-# If using uv
-uv detector --image_path datasets/car-camera/images/00001.jpg --confidence 0.4 --output results.json
+detector --image_path datasets/car-camera/images/00001.jpg --confidence 0.4
 ```
 
-This will process the image, save the output to `results.json`, and print the path to the output file.
-
-### Gradio Web Demo
-
-The Gradio demo (`gradio_demo.py`) provides an interactive web interface to test the pipeline.
-
-**To run the demo**:
-```bash
-python gradio_demo.py
-```
-
-This will start a local web server. Open your browser and navigate to the URL provided (usually `http://127.0.0.1:7860`) to access the interface.
+This will process the image and print the JSON output to the console.
 
 ## Extensibility
 

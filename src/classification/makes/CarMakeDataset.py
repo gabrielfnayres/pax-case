@@ -31,15 +31,7 @@ class CarMakeDataset(Dataset):
         
         self.samples = []
         self._load_samples()
-        
-        # Define augmentations for training
-        # if self.is_training:
-        #     self.augmentations = transforms.Compose([
-        #         transforms.RandomHorizontalFlip(p=0.5),
-        #         transforms.RandomRotation(degrees=10),
-        #         transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
-        #     ])
-        # else:
+    
         self.augmentations = None
     
     def _load_samples(self):
