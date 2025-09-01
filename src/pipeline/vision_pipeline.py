@@ -21,13 +21,14 @@ class VisionPipeline:
         self.object_classifier = ObjectClassfier(model_version=object_model_version, cache_dir=cache_dir)
         self.make_classifier = MakeClassifier(cache_dir=cache_dir)
 
-    def process_image(self, image_path, confidence=0.5):
+    def process_image(self, image_path, confidence=0.5, output_dir='runs/detect'):
         """
         Processes a single image through the full pipeline.
 
         Args:
             image_path (str): The path to the image file.
             confidence (float): The confidence threshold for object detection.
+            output_dir (str): The directory to save the output images.
 
         Returns:
             list: A list of dictionaries, where each dictionary represents a detected vehicle
@@ -40,7 +41,7 @@ class VisionPipeline:
         if img is None:
             raise FileNotFoundError(f"Image not found at {image_path}")
 
-        object_results = self.object_classifier.process(img, context={'confidence': confidence})
+        object_results = self.object_classifier.process(img, context={'confidence': confidence, 'output_dir': output_dir})
         detections = object_results.get('detections', [])
 
         results = []
@@ -67,14 +68,14 @@ class VisionPipeline:
 
         return results
 
-    def process_multiple_images(self, images_dir: str, confidence: float = 0.5, output_dir: Optional[str] = None):
+    def process_multiple_images(self, images_dir: str, confidence: float = 0.5, output_dir: str = 'runs/detect'):
         """
         Processes a sequence of images through the full pipeline.
 
         Args:
             images_dir (str): The path to the image dir.
             confidence (float): The confidence threshold for object detection.
-            output_dir (str): The directory to save the output JSON files.
+            output_dir (str): The directory to save the output images and JSON files.
 
         Returns:
             dict: A dictionary where each key is the filename of an image and the value is a list of dictionaries,
@@ -92,7 +93,7 @@ class VisionPipeline:
         for image_path in tqdm(image_files, desc="Processing Images"):
             filename = os.path.basename(image_path)
             try:
-                result = self.process_image(image_path, confidence)
+                result = self.process_image(image_path, confidence, output_dir)
                 all_results[filename] = result
                 if output_dir:
                     output_path = os.path.join(output_dir, f"{os.path.splitext(filename)[0]}.json")

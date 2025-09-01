@@ -42,13 +42,14 @@ class ObjectClassfier(BaseClassifier):
   def process(self, image, context: dict) -> dict:
       """Process an image and return object detection results."""
       confidence = context.get('confidence', 0.5)
-      results = self.detect(image, confidence=confidence, save_results=False)
+      output_dir = context.get('output_dir', 'runs/detect')
+      results = self.detect(image, confidence=confidence, save_results=True, project=output_dir)
       detections = self.process_detection(results)
       return {'detections': detections}
 
-  def detect(self, img, save_results=True, confidence=0.5):
+  def detect(self, img, save_results=True, confidence=0.5, project='runs/detect'):
     
-    results = self.model.predict(source=img, conf=confidence, classes=self.class_ids, save=save_results, save_txt=save_results, save_conf=save_results)
+    results = self.model.predict(source=img, conf=confidence, classes=self.class_ids, save=save_results, save_txt=save_results, save_conf=save_results, project=project)
     return results
   
   def process_detection(self, results):
