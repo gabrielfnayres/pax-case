@@ -11,6 +11,13 @@ from .carmake_dataset import CarMakeDataset
 
 class MakeClassifier(BaseClassifier):
     def __init__(self, model_name_for_processor='google/siglip-base-patch16-224', cache_dir="models"):
+        """
+        Car Make Classifier 
+
+        Args:
+            model_name_for_processor: Base model used for finetuning
+            cache_dir: Location to cache model necessary files
+        """
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         repo_id = "fnayres/car-make-recognition-google-siglip-base-patch16-224"

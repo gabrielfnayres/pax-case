@@ -20,6 +20,13 @@ def _load_classifier(class_path: str):
 
 class VisionPipeline:
     def __init__(self, config_path: str, cache_dir="models"):
+        """
+        Service pipeline to detect and do Zero-Shot Classification based on available lables
+        and image
+
+        config_path: Pipeline Yaml config file that setup the starting configs
+        cache_dir: Location to cache pipeline necessary files
+        """
         self.config = parse_config_yaml(config_path)
 
         self.pipeline_steps = self.config.get('pipeline', [])
@@ -32,6 +39,18 @@ class VisionPipeline:
             self.classifiers[step['name']] = classifier_class(**params)
 
     def process_image(self, image_path: str, confidence: float = 0.5, output_dir: str = 'runs/detect'):
+        """
+        Processes a single image through the full pipeline.
+
+        Args:
+            images_path (str): The path to the image.
+            confidence (float): The confidence threshold for object detection.
+            output_dir (str): The directory to save the output images and JSON files.
+
+        Returns:
+            dict: A dictionary where each key is the filename of an image and the value is a list of dictionaries,
+                  where each dictionary represents a detected vehicle and its make classification.
+        """
         if not os.path.exists(image_path):
             raise FileNotFoundError(f'Image not found at {image_path}')
         
