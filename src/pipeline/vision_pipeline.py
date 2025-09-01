@@ -8,7 +8,7 @@ import json
 import numpy as np
 
 from classification.objects.object_classifier import ObjectClassfier
-from classification.makes.StanfordViT import MakeClassifier
+from classification.makes.SiglipClassifier import MakeClassifier
 
 class NumpyEncoder(json.JSONEncoder):
     """ Special json encoder for numpy types """
@@ -20,12 +20,12 @@ class NumpyEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 class VisionPipeline:
-    def __init__(self, object_model_version="yolov8l.pt", make_model_name="therealcyberlord/stanford-car-vit-patch16", cache_dir="models"):
+    def __init__(self, make_model_path: str, object_model_version="yolov8l.pt", cache_dir="models"):
         """
         Initializes the vision pipeline by loading the object detection and car make classification models.
         """
         self.object_classifier = ObjectClassfier(model_version=object_model_version, cache_dir=cache_dir)
-        self.make_classifier = MakeClassifier(model_name=make_model_name, cache_dir=cache_dir)
+        self.make_classifier = MakeClassifier(model_path=make_model_path, cache_dir=cache_dir)
 
     def process_image(self, image_path, confidence=0.5):
         """

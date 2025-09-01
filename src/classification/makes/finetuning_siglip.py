@@ -16,14 +16,20 @@ from transformers import (
     AutoImageProcessor, 
     SiglipForImageClassification
 )
-from StanfordDataset import StanfordCarsDataset
+from .CarMakeDataset import CarMakeDataset
 
 class ImageClassificationModule(pl.LightningModule):
-  def __init__(self, model_name: str, num_classes: int, learning_rate: float = 1e-4, weight_decay: float = 0.01):
+  def __init__(self, model_name: str, num_classes: int, learning_rate: float = 1e-4, weight_decay: float = 0.01, id2label=None, label2id=None):
     super().__init__()
     self.save_hyperparameters()
 
-    self.model = SiglipForImageClassification.from_pretrained(model_name, num_labels=num_classes, ignore_mismatched_sizes=True)  
+    self.model = SiglipForImageClassification.from_pretrained(
+        model_name, 
+        num_labels=num_classes, 
+        ignore_mismatched_sizes=True,
+        id2label=id2label,
+        label2id=label2id
+    )  
 
     self.train_accuracy = torchmetrics.Accuracy(task="multiclass", num_classes=num_classes)
     self.val_accuracy = torchmetrics.Accuracy(task="multiclass", num_classes=num_classes)
@@ -89,9 +95,10 @@ class ImageClassificationModule(pl.LightningModule):
     }
   
 
-class StanfordCarsDataModule(pl.LightningDataModule):
-  def __init__(self, batch_size: int = 32, num_workers: int = 4):
+class CarMakeDataModule(pl.LightningDataModule):
+  def __init__(self, data_dir: str, batch_size: int = 32, num_workers: int = 4):
     super().__init__()
+    self.data_dir = data_dir
     self.batch_size = batch_size
     self.num_workers = num_workers
 
@@ -101,20 +108,26 @@ class StanfordCarsDataModule(pl.LightningDataModule):
 
   def setup(self, stage=None):
         if stage == "fit" or stage is None:
-            stanford_dataset = StanfordCarsDataset()
-            train_hf, test_hf = stanford_dataset.load_data()  # This returns (train, test) tuple
-            
-            tr_loader = StanfordCarsDataset(processor=self.processor, is_training=True)
-            val_loader = StanfordCarsDataset(processor=self.processor, is_training=False)
-            
-            self.train_dataset = tr_loader.to_torch_dataset(train_hf)
-            self.val_dataset = val_loader.to_torch_dataset(test_hf)  # Using test as validation
+            self.train_dataset = CarMakeDataset(
+                root_dir=self.data_dir,
+                split='train',
+                processor=self.processor,
+                is_training=True
+            )
+            self.val_dataset = CarMakeDataset(
+                root_dir=self.data_dir,
+                split='valid',
+                processor=self.processor,
+                is_training=False
+            )
         
         if stage == "test" or stage is None:
-            stanford_dataset = StanfordCarsDataset()
-            _, test_hf = stanford_dataset.load_data()
-            test_loader = StanfordCarsDataset(processor=self.processor, is_training=False)
-            self.test_dataset = test_loader.to_torch_dataset(test_hf)
+            self.test_dataset = CarMakeDataset(
+                root_dir=self.data_dir,
+                split='test',
+                processor=self.processor,
+                is_training=False
+            )
   
   def train_dataloader(self):
       return DataLoader(
@@ -150,21 +163,36 @@ if __name__ == '__main__':
   
 
 
-  num_classes = 196  # Stanford Cars has 196 classes
-  batch_size = 32 
-  max_epochs = 10
+  # Dataset configuration
+  data_dir = '/mnt/d/Users/UFPB/gabriel ayres/pax-case/datasets/Car Make Model Recognition Clean.v1i.folder'
+  batch_size = 64
+  max_epochs = 1000
   learning_rate = 1e-4
   weight_decay = 0.01
 
 
-  data_module = StanfordCarsDataModule(batch_size=batch_size, num_workers=4)
-  model = ImageClassificationModule(model_name=model_str, num_classes=num_classes, learning_rate=learning_rate, weight_decay=weight_decay)
+  data_module = CarMakeDataModule(data_dir=data_dir, batch_size=batch_size, num_workers=4)
+  data_module.setup('fit')
+
+  class_names = data_module.train_dataset.get_class_names()
+  id2label = {i: name for i, name in enumerate(class_names)}
+  label2id = {name: i for i, name in enumerate(class_names)}
+  num_classes = len(class_names)
+
+  model = ImageClassificationModule(
+      model_name=model_str, 
+      num_classes=num_classes, 
+      learning_rate=learning_rate, 
+      weight_decay=weight_decay,
+      id2label=id2label,
+      label2id=label2id
+    )
 
   early_stopping = EarlyStopping(monitor='val_accuracy', mode='max', patience=5, verbose=True, min_delta=0.0)
 
   checkpoint_call = ModelCheckpoint(monitor='val_accuracy', mode='max', save_top_k=1, filename='best-checkpoint-{epoch:02d}-{val_accuracy:.3f}', verbose=True)
 
-  logger = TensorBoardLogger('lightning_logs_20', name='stanf-cars')
+  logger = TensorBoardLogger('lightning_logs_car_makes', name='car-make-recognition')
   
   trainer = Trainer(
     max_epochs=max_epochs,
