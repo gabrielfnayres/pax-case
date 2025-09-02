@@ -79,24 +79,30 @@ def main():
                 table.add_row(img_name, "No objects detected", "")
                 continue
 
-            top_prediction = max(detections, key=lambda p: p.get('object_detection', {}).get('confidence', 0))
+            # Sort detections by confidence in descending order
+            sorted_detections = sorted(detections, key=lambda p: p.get('object_detection', {}).get('confidence', 0), reverse=True)
 
-            obj_details = top_prediction.get('object_detection', {})
-            make_details_list = top_prediction.get('make_classification', [])
+            first_row_for_image = True
+            for detection in sorted_detections:
+                obj_details = detection.get('object_detection', {})
+                make_details_list = detection.get('make_classification', [])
 
-            label = obj_details.get('label', 'N/A')
-            confidence = obj_details.get('confidence', 0)
+                obj_label = obj_details.get('class_name', 'N/A')
+                confidence = obj_details.get('confidence', 0)
 
-            if make_details_list:
-                top_make = max(make_details_list, key=lambda m: m.get('confidence', 0))
-                label = top_make.get('label', label)
-                confidence = top_make.get('confidence', confidence)
+                display_name = img_name if first_row_for_image else ""
 
-            table.add_row(
-                img_name,
-                label,
-                f"{confidence:.4f}"
-            )
+                if obj_label in ['car', 'truck']:
+                    if make_details_list:
+                        top_make = max(make_details_list, key=lambda m: m.get('confidence', 0))
+                        label = top_make.get('label', obj_label)
+                        confidence = top_make.get('confidence', confidence)
+                        table.add_row(display_name, label, f"{confidence:.4f}")
+                        first_row_for_image = False
+                    else:
+                        # Car/truck detected but no make classification ran or succeeded
+                        table.add_row(display_name, obj_label, f"{confidence:.4f}")
+                        first_row_for_image = False
         console.print(table)
     else:
         print("No results to save.")

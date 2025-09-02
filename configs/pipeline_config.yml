@@ -1,4 +1,4 @@
-image_path: '/Users/fnayres/pax-case/dummy_images/Sedan/Image_008754.jpg'
+image_path: '/Users/fnayres/Downloads/vehicle-images-dataset/high-tech-car-theft-03-ht-jef-171128_16x9_992.jpg'
 images_dir: null
 confidence: 0.25
 
@@ -12,5 +12,7 @@ pipeline:
     class: classification.makes.siglip_classifier.MakeClassifier
     depends_on: object_detection
     condition: "'car' in detection['class_name'] or 'truck' in detection['class_name']"
+    params:
+      model_name_for_processor: google/siglip-base-patch16-224
     
     
