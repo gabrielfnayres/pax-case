@@ -12,7 +12,3 @@ pipeline:
     class: classification.makes.siglip_classifier.MakeClassifier
     depends_on: object_detection
     condition: "'car' in detection['class_name'] or 'truck' in detection['class_name']"
-    params:
-      model_name_for_processor: google/siglip-base-patch16-224
-    
-    
