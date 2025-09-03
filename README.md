@@ -2,6 +2,11 @@
 
 This project provides a vision pipeline for object and car make classification. It includes a command-line interface (CLI) for processing images.
 
+<div style="display: flex; gap: 10px;">
+  <img src="svg/images.jpeg" width="200"/>
+  <img src="svg/image0.jpg" width="200"/>
+</div>
+
 ## Features
 
 - **Two-Stage Pipeline**:
