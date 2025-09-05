@@ -13,11 +13,13 @@ class NumpyEncoder(json.JSONEncoder):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
 
-def parse_config_yaml(config_file):
+def parse_config_yaml(config_file, only_pipeline: bool = False):
   if not config_file:
     raise FileNotFoundError(f'File do not exist {config_file}')
 
   with open(config_file, 'r') as stream:
     data = yaml.safe_load(stream)
+    if only_pipeline:
+      return data['pipeline']
   return data
 
