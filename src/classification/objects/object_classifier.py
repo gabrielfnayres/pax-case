@@ -7,7 +7,7 @@ import shutil
 from classification.base import BaseClassifier
 
 class ObjectClassifier(BaseClassifier):
-  def __init__(self, model_version="yolov8l.pt", cache_dir="models"):
+  def __init__(self, model_version="yolov8l.pt", cache_dir="models", context: dict):
     """
     Object Detection model  
 
@@ -32,7 +32,7 @@ class ObjectClassifier(BaseClassifier):
         shutil.move(str(downloaded_path), str(model_path))
 
         self.model = YOLO(str(model_path))
-
+    self.context = context
     self.classes = {
       0: 'person',
       1: 'bicycle',
@@ -52,7 +52,7 @@ class ObjectClassifier(BaseClassifier):
       save_results = context.get('save_results', True)
 
       results = self.detect(image, confidence=confidence, save_results=save_results, project=output_dir)
-      detections = self.process_detection(results)
+      detections = self.process_detection(results, confidence)
       return {'detections': detections}
 
   def detect(self, img, save_results: bool = True, confidence: float = 0.5, project: str = 'runs/detections'):
@@ -68,7 +68,7 @@ class ObjectClassifier(BaseClassifier):
       )
       return results
   
-  def process_detection(self, results):
+  def process_detection(self, results, confidence):
     detections = []
 
     for res in results:
@@ -92,6 +92,8 @@ class ObjectClassifier(BaseClassifier):
             'width': x2 - x1,
             'height': y2 - y1
           }     
+          if detection.get('confidence') < confidence:
+            continue
           detections.append(detection)
 
     return detections
