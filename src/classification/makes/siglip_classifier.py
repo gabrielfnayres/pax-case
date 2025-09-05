@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from PIL import Image
 from transformers import AutoImageProcessor
 import json
@@ -56,7 +57,7 @@ class MakeClassifier(BaseClassifier):
 
         with torch.no_grad():
             logits = self.model(inputs['pixel_values'])
-            predictions = nn.functional.softmax(logits, dim=-1)
+            predictions = F.softmax(logits, dim=-1)
 
         top_k_values, top_k_indices = torch.topk(predictions, k)
 
@@ -69,6 +70,9 @@ class MakeClassifier(BaseClassifier):
                 label = self.id2label[class_idx]
             else:
                 label = f"Class: {class_idx}"
+
+            if float(confidence) < float(context.get('confidence')):
+              continue
 
             results.append({
                 'label': label,
