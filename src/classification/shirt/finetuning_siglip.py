@@ -1,3 +1,4 @@
+from classification.cap.cap_dataset import CapDataset
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
@@ -16,7 +17,7 @@ from transformers import (
     AutoImageProcessor, 
     Siglip2ForImageClassification
 )
-from .cap_dataset import CapDataset 
+from .shirt_dataset import ShirtDataset 
 
 class ImageClassificationModule(pl.LightningModule):
   def __init__(self, model_name: str, num_classes: int, learning_rate: float = 1e-4, weight_decay: float = 0.01, id2label=None, label2id=None):
@@ -48,7 +49,7 @@ class ImageClassificationModule(pl.LightningModule):
       }
     }
    
-class CapDataModule(pl.LightningDataModule):
+class ShirtDataModule(pl.LightningDataModule):
   def __init__(self, data_dir: str, batch_size: int = 32, num_workers: int = 4):
     super().__init__()
     self.data_dir = data_dir
@@ -61,13 +62,13 @@ class CapDataModule(pl.LightningDataModule):
 
   def setup(self, stage=None):
         if stage == "fit" or stage is None:
-            self.train_dataset = CapDataset(
+            self.train_dataset = ShirtDataset(
                 root_dir=self.data_dir,
                 split='train',
                 processor=self.processor,
                 is_training=True
             )
-            self.val_dataset = CapDataset(
+            self.val_dataset = ShirtDataset(
                 root_dir=self.data_dir,
                 split='valid',
                 processor=self.processor,
@@ -75,7 +76,7 @@ class CapDataModule(pl.LightningDataModule):
             )
         
         if stage == "test" or stage is None:
-            self.test_dataset = CapDataset(
+            self.test_dataset = ShirtDataset(
                 root_dir=self.data_dir,
                 split='test',
                 processor=self.processor,
