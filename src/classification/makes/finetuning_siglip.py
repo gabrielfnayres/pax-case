@@ -37,9 +37,9 @@ class ImageClassificationModule(pl.LightningModule):
     
     self.criterion = nn.CrossEntropyLoss()
 
-  def forward(self, pixel_values):
-    outputs = self.model(pixel_values=pixel_values)
-    return outputs.logits
+  def forward(self, x):
+    out = self.model(pixel_values=x)
+    return out.logits
   
   def training_step(self, batch, batch_idx):
     images, labels = batch
