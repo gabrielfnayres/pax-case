@@ -71,7 +71,7 @@ class VisionPipeline:
         if not detections:
             return []
 
-        for det in detections:
+        for det in detections: # should be improved o(N) bad complexity
             detection_result = {initial_step['name']: det}
             
             for step in self.pipeline_steps[1:]:
